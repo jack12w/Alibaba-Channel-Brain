@@ -6,3 +6,6 @@ server/data/uploads/
 .workbuddy/
 *.log
 .DS_Store
+# 内部浏览器插件（采集阿里内网数据，含敏感数据源 ID，不公开）
+# 本地代码保留在 extension/ 目录，但不入库。如需重新追踪，使用 `git add -f extension/`
+extension/
