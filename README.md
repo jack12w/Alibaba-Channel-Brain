@@ -61,7 +61,5 @@ npm run dev
 channel-brain/
 ├── docs/          # 设计文档
 ├── server/        # 后端 API（Express + SQLite）
-├── web/           # 前端（React + Ant Design）
-├── extension/     # 浏览器插件（Chrome MV3，规划中）
-└── deploy/        # 部署脚本（规划中）
+└── web/           # 前端（React + Ant Design）
 ```
