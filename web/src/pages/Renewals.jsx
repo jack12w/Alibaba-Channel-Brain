@@ -1,7 +1,7 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { Table, Segmented, Tag, Button, Space, Select, App, Descriptions, Statistic, Row, Col, Card, Drawer, Spin } from 'antd';
 import { SyncOutlined, ShoppingOutlined } from '@ant-design/icons';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { api } from '../api/client';
 
 const LEVEL_COLOR = { red: 'red', orange: 'orange', yellow: 'gold', blue: 'blue' };
@@ -9,7 +9,12 @@ const LEVEL_LABEL = { red: '红色 <30天', orange: '橙色 30-60天', yellow: '
 const RENEWAL_STATUS = { open: '待跟进', following: '跟进中', done: '已续约', lost: '已流失' };
 
 export default function Renewals() {
-  const [windowType, setWindowType] = useState('T3');
+  const [searchParams] = useSearchParams();
+  // 支持从经营总览等页面带 query 预筛选进入（如 ?window=T3&level=red / ?window=expired）
+  const initialWindow = searchParams.get('window') || 'T3';
+  const initialLevel = searchParams.get('level') || undefined;
+  const [windowType, setWindowType] = useState(initialWindow);
+  const [level, setLevel] = useState(initialLevel);
   const [items, setItems] = useState([]);
   const [summary, setSummary] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -20,10 +25,12 @@ export default function Renewals() {
   const navigate = useNavigate();
   const { message } = App.useApp();
 
-  const fetchPanel = async (w = windowType, mg = manager) => {
+  const fetchPanel = async (w = windowType, lv = level) => {
     setLoading(true);
     try {
-      const res = await api.get(`/renewals/panel?window=${w}${mg ? `&level=${mg}` : ''}`);
+      const qs = [`window=${encodeURIComponent(w)}`];
+      if (lv) qs.push(`level=${encodeURIComponent(lv)}`);
+      const res = await api.get(`/renewals/panel?${qs.join('&')}`);
       setItems(res.items);
     } catch (e) {
       message.error(e.message);
@@ -85,6 +92,12 @@ export default function Renewals() {
     },
   ];
 
+  // 客户经理筛选改为前端过滤（避免空结果），窗口/等级走后端 query
+  const visibleItems = useMemo(
+    () => (manager ? items.filter((i) => i.manager_name === manager) : items),
+    [items, manager]
+  );
+
   const s = summary || { T3: {}, T6: {} };
 
   return (
@@ -104,24 +117,34 @@ export default function Renewals() {
         <Space style={{ marginBottom: 16 }} wrap>
           <Segmented
             value={windowType}
-            onChange={(v) => { setWindowType(v); fetchPanel(v, manager); }}
+            onChange={(v) => { setWindowType(v); setLevel(undefined); fetchPanel(v, undefined); }}
             options={[
               { value: 'T3', label: 'T3 续约窗口（3个月内）' },
               { value: 'T6', label: 'T6 续约窗口（6个月内）' },
+              { value: 'expired', label: '已过期' },
             ]}
+          />
+          <Select
+            placeholder="预警等级"
+            allowClear
+            disabled={windowType !== 'T3'}
+            style={{ width: 150 }}
+            value={level}
+            onChange={(v) => { setLevel(v); fetchPanel(windowType, v); }}
+            options={Object.entries(LEVEL_LABEL).map(([k, label]) => ({ value: k, label }))}
           />
           <Select
             placeholder="客户经理筛选"
             allowClear
             style={{ width: 160 }}
             value={manager}
-            onChange={(v) => { setManager(v); fetchPanel(windowType, v); }}
+            onChange={(v) => setManager(v)}
             options={managers.map((m) => ({ value: m.manager_name, label: `${m.manager_name}(${m.n})` }))}
           />
           <Button icon={<SyncOutlined />} onClick={() => fetchPanel()}>刷新</Button>
         </Space>
 
-        <Table rowKey="account_id" loading={loading} columns={columns} dataSource={items} scroll={{ x: 1400 }} pagination={{ pageSize: 20 }} />
+        <Table rowKey="account_id" loading={loading} columns={columns} dataSource={visibleItems} scroll={{ x: 1400 }} pagination={{ pageSize: 20 }} />
       </div>
 
       <Drawer

@@ -33,17 +33,23 @@ function latestStoreRows(scope) {
   `).all(params);
 }
 
-// GET /api/renewals/panel — 续约面板（T3/T6 动态计算）
+// GET /api/renewals/panel — 续约面板（T3/T6/expired 动态计算，可按预警等级筛选）
 router.get('/panel', requirePermission('renewal.view'), (req, res) => {
-  const windowType = req.query.window === 'T6' ? 'T6' : 'T3';
+  const rawWindow = req.query.window;
+  const windowType = rawWindow === 'T6' ? 'T6' : rawWindow === 'expired' ? 'expired' : 'T3';
   const level = req.query.level || null;
   const scope = dataScope('s.', req.user, db);
   const rows = latestStoreRows(scope);
   const items = [];
   for (const r of rows) {
     const info = compute(r.contract_end);
-    if (!info || info.window_type !== windowType) continue;
-    if (level && info.alert_level !== level) continue;
+    if (!info) continue;
+    if (windowType === 'expired') {
+      if (info.window_type !== 'expired') continue;
+    } else {
+      if (info.window_type !== windowType) continue;
+      if (level && info.alert_level !== level) continue;
+    }
     const st = db.prepare('SELECT status FROM renewal_status WHERE account_id = ?').get(r.account_id);
     items.push({ ...r, ...info, status: st ? st.status : 'open' });
   }
