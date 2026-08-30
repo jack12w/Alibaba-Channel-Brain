@@ -846,7 +846,7 @@ channel-brain/
 
 ### 17.3 数据导入
 
-- 目录：`C:\Users\TFKJ\Desktop\渠道数据导入\`，每天 09:00 定时扫描（node-cron）
+- 目录：`~/Desktop/渠道数据导入/`（跨平台，默认取当前用户桌面），每天 09:00 定时扫描（node-cron）
 - 编码：UTF-8 解码；AWB 公司名脱敏 → account_id 从 customers 回填
 - 幂等：按 stat_date+account_id upsert + 文件 hash 去重（import_files）
 - 历史：全量保留，永不删除，可查任意历史明细

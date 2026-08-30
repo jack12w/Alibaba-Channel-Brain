@@ -451,7 +451,7 @@ export default function Settings() {
           <Input
             value={importDir}
             onChange={(e) => setImportDir(e.target.value)}
-            placeholder="例如 C:/Users/TFKJ/Desktop/渠道数据导入"
+            placeholder="例如 /Users/你的用户名/Desktop/渠道数据导入"
             style={{ flex: 1 }}
           />
           <Button type="primary" loading={importDirLoading} onClick={onSaveImportDir}>保存目录</Button>

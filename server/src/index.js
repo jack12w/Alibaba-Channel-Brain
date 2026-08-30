@@ -4,6 +4,8 @@ const express = require('express');
 const cors = require('cors');
 const morgan = require('morgan');
 const cron = require('node-cron');
+const os = require('os');
+const path = require('path');
 
 const { db, ensureSchema } = require('./db');
 const { initJwtSecret } = require('./auth');
@@ -73,8 +75,8 @@ app.use((err, req, res, next) => {
 });
 
 // 每日 09:00 扫描导入目录（真实数据 CSV）
-// 目录优先取系统设置页配置，未配置时回退到默认桌面目录
-const DEFAULT_IMPORT_DIR = 'C:/Users/TFKJ/Desktop/渠道数据导入';
+// 目录优先取系统设置页配置，未配置时回退到当前用户桌面目录（跨平台，不硬编码用户名）
+const DEFAULT_IMPORT_DIR = path.join(os.homedir(), 'Desktop', '渠道数据导入');
 function getImportDir() {
   const row = db.prepare("SELECT value FROM app_settings WHERE key = 'import_dir'").get();
   return row && row.value ? row.value : DEFAULT_IMPORT_DIR;
