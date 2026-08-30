@@ -1,0 +1,53 @@
+* {
+  box-sizing: border-box;
+}
+
+html, body, #root {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  /* 随主题翻转的页面底色，回退值兼容 ConfigProvider 渲染前 */
+  background: var(--ant-color-bg-layout, #f0f2f5);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  color: var(--ant-color-text, rgba(0, 0, 0, 0.88));
+}
+
+/* 自定义卡片：背景/边框/文字全部走 AntD 主题变量，浅色/深色自动切换 */
+.page-card {
+  background: var(--ant-color-bg-container, #fff);
+  border-radius: 8px;
+  padding: 20px;
+}
+
+.stat-title {
+  color: var(--ant-color-text-secondary, rgba(0, 0, 0, 0.45));
+  font-size: 13px;
+}
+
+.stat-value {
+  font-size: 26px;
+  font-weight: 600;
+  color: var(--ant-color-text, rgba(0, 0, 0, 0.88));
+}
+
+/* 登录页背景：浅色=浅蓝灰渐变(亮)，深色=深蓝渐变，严格遵循"浅底黑字/深底白字" */
+.login-bg {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+}
+[data-theme='light'] .login-bg {
+  background: linear-gradient(135deg, #e6f0ff 0%, #ffffff 50%, #e0ebff 100%);
+}
+[data-theme='dark'] .login-bg {
+  background: linear-gradient(135deg, #0a1a3a 0%, #0f2f5a 50%, #061025 100%);
+}
+
+/* 移动端：内容区与卡片内边距收紧，避免横向溢出 */
+@media (max-width: 575px) {
+  .page-card {
+    padding: 14px;
+  }
+}

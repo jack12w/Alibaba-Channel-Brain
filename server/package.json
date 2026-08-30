@@ -1,0 +1,25 @@
+{
+  "name": "channel-brain-server",
+  "version": "0.1.0",
+  "description": "渠道中心大脑系统 - 后端 API 服务",
+  "main": "src/index.js",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "start": "node src/index.js",
+    "dev": "node --watch src/index.js",
+    "seed": "node src/seed.js",
+    "init-db": "node src/db.js"
+  },
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "better-sqlite3": "^11.3.0",
+    "cors": "^2.8.5",
+    "express": "^4.19.2",
+    "jsonwebtoken": "^9.0.2",
+    "morgan": "^1.10.0",
+    "multer": "^2.2.0",
+    "node-cron": "^3.0.3"
+  }
+}

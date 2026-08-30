@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <title>渠道中心数据采集器 · 配置</title>
+  <style>
+    body { font-family: -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif; background: #f0f2f5; margin: 0; padding: 40px 0; }
+    .card { max-width: 520px; margin: 0 auto; background: #fff; border-radius: 10px; padding: 28px 32px; box-shadow: 0 4px 16px rgba(0,0,0,0.08); }
+    h1 { font-size: 18px; margin: 0 0 6px; }
+    .sub { color: #888; font-size: 12px; margin-bottom: 20px; }
+    .field { margin-bottom: 16px; }
+    label { display: block; font-size: 13px; color: #555; margin-bottom: 6px; }
+    input[type=text], input[type=password] { width: 100%; padding: 8px 10px; border: 1px solid #d9d9d9; border-radius: 6px; font-size: 13px; box-sizing: border-box; }
+    input:focus { border-color: #0f6bff; outline: none; }
+    .hint { font-size: 12px; color: #999; margin-top: 4px; line-height: 1.6; }
+    .check { display: flex; align-items: center; gap: 8px; }
+    button { margin-top: 8px; padding: 9px 0; width: 100%; background: #0f6bff; color: #fff; border: none; border-radius: 6px; font-size: 14px; cursor: pointer; }
+    button:active { opacity: 0.85; }
+    .tip { background: #e6f4ff; border-radius: 6px; padding: 10px 12px; font-size: 12px; color: #0958d9; line-height: 1.7; margin-bottom: 18px; }
+    code { background: #f0f0f0; padding: 1px 5px; border-radius: 3px; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>渠道中心数据采集器 · 配置</h1>
+    <div class="sub">采集 FBI / DeepInsight 看板数据并同步至渠道中心大脑</div>
+
+    <div class="tip">
+      <b>使用步骤：</b><br />
+      1. 渠道中心管理员登录系统 → 客户管理 → 详情页生成 sync_token（或询问管理员）<br />
+      2. 填写下方配置并保存<br />
+      3. 打开对应看板页面（FBI / DeepInsight），插件自动采集；也可点击工具栏图标手动上传
+    </div>
+
+    <div class="field">
+      <label>渠道中心地址（API Base）</label>
+      <input type="text" id="apiBase" placeholder="http://服务器IP:3000 或 https://brain.example.com" />
+      <div class="hint">开发环境默认 http://localhost:3000；部署后填服务器地址（需与系统同域或开启 CORS）</div>
+    </div>
+
+    <div class="field">
+      <label>店铺 ID（store_id，对应渠道中心的客户）</label>
+      <input type="text" id="storeId" placeholder="如 cdyzbg" />
+      <div class="hint">渠道中心「客户管理」中的店铺 ID，行业类数据（TOP诊断/AWB/行业）可留空</div>
+    </div>
+
+    <div class="field">
+      <label>sync_token（采集鉴权令牌）</label>
+      <input type="password" id="syncToken" placeholder="管理员生成的 32 位令牌" />
+      <div class="hint">渠道中心：客户详情或管理员接口生成；行业类数据用任意客户 token 均可</div>
+    </div>
+
+    <div class="field">
+      <label class="check">
+        <input type="checkbox" id="autoUpload" checked />
+        捕获到数据后自动上传
+      </label>
+    </div>
+
+    <button id="save">保存配置</button>
+    <div class="hint" id="msg" style="text-align:center; margin-top:10px"></div>
+  </div>
+  <script src="options.js"></script>
+</body>
+</html>
