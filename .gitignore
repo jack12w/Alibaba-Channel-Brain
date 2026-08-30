@@ -9,3 +9,7 @@ server/data/uploads/
 # 内部浏览器插件（采集阿里内网数据，含敏感数据源 ID，不公开）
 # 本地代码保留在 extension/ 目录，但不入库。如需重新追踪，使用 `git add -f extension/`
 extension/
+
+# 项目设计文档（架构/数据迁移方案，含内部业务口径，不公开）
+# 本地文档保留在 docs/ 目录，但不入库。如需重新追踪，使用 `git add -f docs/`
+docs/
