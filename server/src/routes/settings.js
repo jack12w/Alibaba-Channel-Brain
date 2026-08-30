@@ -5,7 +5,7 @@ const path = require('path');
 const fs = require('fs');
 const multer = require('multer');
 const { db } = require('../db');
-const { requireAuth, requirePermission } = require('../auth');
+const { requireAuth, requirePermission, getJwtSecret, regenerateJwtSecret } = require('../auth');
 const dingtalk = require('../services/dingtalk');
 
 const router = express.Router();
@@ -151,6 +151,22 @@ router.put('/channel-assessment', requirePermission('system.manage'), (req, res)
   }
   setSetting('channel_assessment', JSON.stringify({ baseline, target: target || {} }));
   res.json({ ok: true });
+});
+
+// ---------- JWT 密钥（仅系统管理员）----------
+// GET /api/settings/jwt-secret — 读取当前密钥（明文返回，前端用显隐切换；无权限返回 403）
+router.get('/jwt-secret', requirePermission('system.manage'), (req, res) => {
+  res.json({ secret: getJwtSecret() });
+});
+
+// POST /api/settings/jwt-secret/regenerate — 重新生成密钥（旧令牌立即失效，全员掉登录）
+router.post('/jwt-secret/regenerate', requirePermission('system.manage'), (req, res) => {
+  try {
+    const secret = regenerateJwtSecret();
+    res.json({ ok: true, secret });
+  } catch (e) {
+    res.status(500).json({ error: `重新生成失败：${e.message}` });
+  }
 });
 
 module.exports = router;

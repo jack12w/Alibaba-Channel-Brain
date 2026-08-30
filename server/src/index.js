@@ -6,6 +6,7 @@ const morgan = require('morgan');
 const cron = require('node-cron');
 
 const { db, ensureSchema } = require('./db');
+const { initJwtSecret } = require('./auth');
 const importer = require('./services/importer');
 
 const authRoutes = require('./routes/auth');
@@ -34,6 +35,7 @@ const renewalService = require('./services/renewalService');
 const PORT = process.env.PORT || 3000;
 
 ensureSchema();
+initJwtSecret(); // 确保 jwt_secret 已存在（首次自动播种强随机密钥）
 
 const app = express();
 app.use(cors());

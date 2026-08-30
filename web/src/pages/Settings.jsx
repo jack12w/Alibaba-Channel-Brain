@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Card, Form, Input, Switch, Button, Select, App, Alert, Typography, Space, Upload, InputNumber, Tooltip, Table, Popconfirm } from 'antd';
-import { SendOutlined, UploadOutlined, QuestionCircleOutlined, DeleteOutlined } from '@ant-design/icons';
-import { api, getToken } from '../api/client';
+import { SendOutlined, UploadOutlined, QuestionCircleOutlined, DeleteOutlined, CopyOutlined, ReloadOutlined } from '@ant-design/icons';
+import { api, getToken, getUser } from '../api/client';
 
 // 取当前页面的一级域名（如 skills.rehomi.com → rehomi.com）；localhost / IP / 异常时兜底为 rehomi.com
 function getFirstLevelDomain() {
@@ -106,6 +106,12 @@ export default function Settings() {
   const [assess, setAssess] = useState({ baseline: DEFAULT_BASELINE, target: {} });
   const [assessSaving, setAssessSaving] = useState(false);
   const { message } = App.useApp();
+  const [jwtSecret, setJwtSecret] = useState('');
+  const [jwtSecretLoading, setJwtSecretLoading] = useState(false);
+  // JWT 密钥属高危配置：仅 system.manage 权限（系统管理员/老板/后端人事）可见可操作
+  const _user = getUser();
+  const _perms = (_user && _user.permissions) || [];
+  const canManageSystem = _perms.includes('system.manage');
 
   useEffect(() => {
     api.get('/settings/dingtalk').then((cfg) => {
@@ -130,6 +136,10 @@ export default function Settings() {
         target: (d && d.target) || {},
       });
     }).catch(() => {});
+
+    if (canManageSystem) {
+      api.get('/settings/jwt-secret').then((r) => setJwtSecret(r.secret || '')).catch(() => {});
+    }
   }, []);
 
   const onSave = async () => {
@@ -345,6 +355,29 @@ export default function Settings() {
     }
   };
 
+  const onCopySecret = async () => {
+    if (!jwtSecret) return;
+    try {
+      await navigator.clipboard.writeText(jwtSecret);
+      message.success('密钥已复制到剪贴板');
+    } catch {
+      message.warning('复制失败，请手动选择文本复制');
+    }
+  };
+
+  const onRegenerateSecret = async () => {
+    setJwtSecretLoading(true);
+    try {
+      const data = await api.post('/settings/jwt-secret/regenerate', {});
+      setJwtSecret(data.secret || '');
+      message.success('密钥已重新生成，所有在线用户已被强制退出登录');
+    } catch (e) {
+      message.error(e.message);
+    } finally {
+      setJwtSecretLoading(false);
+    }
+  };
+
   return (
     <div style={{ maxWidth: 1080 }}>
       <Card title="渠道 Logo" style={{ marginBottom: 16 }}>
@@ -448,6 +481,36 @@ export default function Settings() {
           保存考核配置
         </Button>
       </Card>
+
+      {canManageSystem && (
+      <Card title="系统设置 · JWT 密钥" style={{ marginBottom: 16 }}>
+        <Alert
+          type="warning" showIcon style={{ marginBottom: 16 }}
+          message="密钥用于签发登录令牌。重新生成后，所有在线用户将被强制退出、需重新登录。请勿泄露此密钥。"
+        />
+        <Space direction="vertical" style={{ width: '100%' }} size={12}>
+          <Input.Password
+            value={jwtSecret}
+            readOnly
+            placeholder="加载中…"
+            style={{ maxWidth: 600, fontFamily: 'monospace' }}
+          />
+          <Space>
+            <Button icon={<CopyOutlined />} onClick={onCopySecret} disabled={!jwtSecret}>复制密钥</Button>
+            <Popconfirm
+              title="重新生成 JWT 密钥？"
+              description="所有在线用户将立即被强制退出登录，需重新输入账号密码。"
+              okText="确认重新生成"
+              cancelText="取消"
+              okButtonProps={{ danger: true }}
+              onConfirm={onRegenerateSecret}
+            >
+              <Button danger icon={<ReloadOutlined />} loading={jwtSecretLoading}>随机重新生成</Button>
+            </Popconfirm>
+          </Space>
+        </Space>
+      </Card>
+      )}
 
       <Card title="系统版权" size="small">
         <Typography.Paragraph style={{ marginBottom: 4 }}>

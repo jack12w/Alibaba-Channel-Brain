@@ -2,8 +2,61 @@
 
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
+const crypto = require('crypto');
+const { db } = require('./db');
 
-const JWT_SECRET = process.env.JWT_SECRET || 'channel-brain-dev-secret-change-in-production';
+// JWT 密钥：运行期从 app_settings(jwt_secret) 读取；缺省时自动生成强随机密钥并持久化，
+// 取代原先的 process.env.JWT_SECRET 常量，支持在系统设置页热更新、无需重启 server。
+const FALLBACK_JWT_SECRET = 'channel-brain-dev-secret-change-in-production';
+let cachedJwtSecret = null;
+
+function readJwtSecretFromDb() {
+  try {
+    const row = db.prepare("SELECT value FROM app_settings WHERE key = 'jwt_secret'").get();
+    return row && row.value ? row.value : null;
+  } catch (e) {
+    return null; // 表尚未就绪（理论不会，ensureSchema 启动期已执行）
+  }
+}
+
+function writeJwtSecretToDb(secret) {
+  db.prepare(`
+    INSERT INTO app_settings (key, value, updated_at) VALUES ('jwt_secret', ?, datetime('now','localtime'))
+    ON CONFLICT(key) DO UPDATE SET value = excluded.value, updated_at = excluded.updated_at
+  `).run(secret);
+}
+
+function getJwtSecret() {
+  if (cachedJwtSecret) return cachedJwtSecret;
+  const fromDb = readJwtSecretFromDb();
+  if (fromDb) {
+    cachedJwtSecret = fromDb;
+    return cachedJwtSecret;
+  }
+  // 首次：自动播种强随机密钥（32 字节 hex = 64 字符），避免长期用弱占位符
+  const generated = crypto.randomBytes(32).toString('hex');
+  try {
+    writeJwtSecretToDb(generated);
+    cachedJwtSecret = generated;
+    return cachedJwtSecret;
+  } catch (e) {
+    cachedJwtSecret = FALLBACK_JWT_SECRET;
+    return cachedJwtSecret;
+  }
+}
+
+function regenerateJwtSecret() {
+  const generated = crypto.randomBytes(32).toString('hex');
+  writeJwtSecretToDb(generated);
+  cachedJwtSecret = generated; // 热更新：旧 token 立即验不过，所有在线用户掉登录
+  return generated;
+}
+
+function initJwtSecret() {
+  // 启动期调用：确保 jwt_secret 已存在（已有则不动）
+  getJwtSecret();
+}
+
 const TOKEN_TTL = '12h';
 
 function signToken(user) {
@@ -19,7 +72,7 @@ function signToken(user) {
       team_id: user.team_id,
       permissions: user.permissions || [],
     },
-    JWT_SECRET,
+    getJwtSecret(),
     { expiresIn: TOKEN_TTL }
   );
 }
@@ -37,7 +90,7 @@ function requireAuth(req, res, next) {
   const token = header.startsWith('Bearer ') ? header.slice(7) : null;
   if (!token) return res.status(401).json({ error: '未登录' });
   try {
-    req.user = jwt.verify(token, JWT_SECRET);
+    req.user = jwt.verify(token, getJwtSecret());
     next();
   } catch (e) {
     return res.status(401).json({ error: '登录已过期，请重新登录' });
@@ -123,4 +176,4 @@ function dataScope(alias, user, db, field) {
   return { sql: '1 = 0', params: {} };
 }
 
-module.exports = { signToken, hashPassword, verifyPassword, requireAuth, requireRole, requirePermission, scopeFilter, dataScope, JWT_SECRET };
+module.exports = { signToken, hashPassword, verifyPassword, requireAuth, requireRole, requirePermission, scopeFilter, dataScope, getJwtSecret, regenerateJwtSecret, initJwtSecret };
