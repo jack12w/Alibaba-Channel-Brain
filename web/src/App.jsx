@@ -73,33 +73,34 @@ function RequirePermission({ permission, children }) {
   return <Forbidden />;
 }
 
-function SideContent({ theme, selectedKey, items, onMenuClick }) {
+function SideContent({ theme, selectedKey, items, openKeys, onOpenChange, onMenuClick }) {
   const [logoOk, setLogoOk] = useState(true);
   return (
-    <>
-      <div style={{ minHeight: 64, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '12px 16px' }}>
+    <div className="cb-sider">
+      <div className="cb-sider-logo">
         {logoOk ? (
           <img
             src="/api/settings/logo"
             alt="渠道 Logo"
-            style={{ maxHeight: 40, maxWidth: '100%', objectFit: 'contain' }}
             onError={() => setLogoOk(false)}
           />
         ) : (
-          <div style={{ display: 'flex', alignItems: 'center', color: 'var(--ant-color-text)', fontSize: 16, fontWeight: 600 }}>
-            <BellOutlined style={{ marginRight: 8, color: 'var(--ant-color-primary)' }} />
-            渠道中心大脑
+          <div className="cb-sider-logo-fallback">
+            <BellOutlined />
+            <span>渠道中心大脑</span>
           </div>
         )}
       </div>
       <Menu
-        theme={theme}
         mode="inline"
+        theme={theme}
         selectedKeys={[selectedKey]}
+        openKeys={openKeys}
+        onOpenChange={onOpenChange}
         items={items}
         onClick={onMenuClick}
       />
-    </>
+    </div>
   );
 }
 
@@ -112,55 +113,47 @@ function AppLayout() {
   const screens = useBreakpoint();
   const isMobile = !screens.md; // < 768px 视为移动端
   const [drawerOpen, setDrawerOpen] = useState(false);
+  // 子菜单展开状态：受控。默认全部展开，让用户一眼看到所有页面；点击父级可自由折叠/展开
+  const [openKeys, setOpenKeys] = useState(['m-ys', 'm-asset', 'm-sys']);
 
   const canSee = (perm) => !perm || perms.includes(perm) || perms.includes('system.manage');
+  // 多子项模块用 submenu（父级可展开，子项两列网格）；单子项模块直接作为顶层菜单项，避免无意义嵌套
   const menuGroups = [
+    { key: '/', icon: <DashboardOutlined />, label: <Link to="/">经营总览</Link>, permission: 'dashboard.view' },
+    { key: '/customers', icon: <TeamOutlined />, label: <Link to="/customers">客户管理</Link>, permission: 'customer.view' },
     {
-      type: 'group', label: '总览', children: [
-        { key: '/', icon: <DashboardOutlined />, label: <Link to="/">经营总览</Link>, permission: 'dashboard.view' },
+      key: 'm-ys', icon: <PieChartOutlined />, label: '育商运营', children: [
+        { key: '/goals', label: <Link to="/goals">目标与达成</Link>, permission: 'goal.view' },
+        { key: '/camp', label: <Link to="/camp">育商大盘</Link>, permission: 'goal.view' },
+        { key: '/milestones', label: <Link to="/milestones">新商里程碑</Link>, permission: 'goal.view' },
+        { key: '/ads', label: <Link to="/ads">广告/开P率</Link>, permission: 'goal.view' },
+        { key: '/revenue', label: <Link to="/revenue">AWB营收</Link>, permission: 'goal.view' },
+        { key: '/work', label: <Link to="/work">运营工作</Link>, permission: 'work.view' },
+        { key: '/knowledge', label: <Link to="/knowledge">知识库</Link>, permission: 'knowledge.view' },
       ],
     },
     {
-      type: 'group', label: '客户主数据', children: [
-        { key: '/customers', icon: <TeamOutlined />, label: <Link to="/customers">客户管理</Link>, permission: 'customer.view' },
+      key: 'm-asset', icon: <ShopOutlined />, label: '重资产', children: [
+        { key: '/renewals', label: <Link to="/renewals">T3/T6续约</Link>, permission: 'renewal.view' },
+        { key: '/sell', label: <Link to="/sell">售卖机会</Link>, permission: 'sell.view' },
       ],
     },
+    { key: '/opportunities', icon: <DollarOutlined />, label: <Link to="/opportunities">新签跟进</Link>, permission: 'opportunity.view' },
     {
-      type: 'group', label: '育商运营 a', children: [
-        { key: '/goals', icon: <FlagOutlined />, label: <Link to="/goals">目标与达成</Link>, permission: 'goal.view' },
-        { key: '/camp', icon: <PieChartOutlined />, label: <Link to="/camp">育商大盘</Link>, permission: 'goal.view' },
-        { key: '/milestones', icon: <RiseOutlined />, label: <Link to="/milestones">新商里程碑</Link>, permission: 'goal.view' },
-        { key: '/ads', icon: <ThunderboltOutlined />, label: <Link to="/ads">广告/开P率</Link>, permission: 'goal.view' },
-        { key: '/revenue', icon: <AccountBookOutlined />, label: <Link to="/revenue">AWB营收</Link>, permission: 'goal.view' },
-        { key: '/work', icon: <AimOutlined />, label: <Link to="/work">运营工作</Link>, permission: 'work.view' },
-        { key: '/knowledge', icon: <BookOutlined />, label: <Link to="/knowledge">知识库</Link>, permission: 'knowledge.view' },
-      ],
-    },
-    {
-      type: 'group', label: '重资产 b', children: [
-        { key: '/renewals', icon: <SyncOutlined />, label: <Link to="/renewals">T3/T6续约</Link>, permission: 'renewal.view' },
-        { key: '/sell', icon: <ShopOutlined />, label: <Link to="/sell">售卖机会</Link>, permission: 'sell.view' },
-      ],
-    },
-    {
-      type: 'group', label: '新签客户 c', children: [
-        { key: '/opportunities', icon: <DollarOutlined />, label: <Link to="/opportunities">新签跟进</Link>, permission: 'opportunity.view' },
-      ],
-    },
-    {
-      type: 'group', label: '系统配置 d', children: [
-        { key: '/organize', icon: <ApartmentOutlined />, label: <Link to="/organize">组织管理</Link>, permission: 'system.manage' },
-        { key: '/settings', icon: <SettingOutlined />, label: <Link to="/settings">系统设置</Link>, permission: 'system.manage' },
+      key: 'm-sys', icon: <SettingOutlined />, label: '系统配置', children: [
+        { key: '/organize', label: <Link to="/organize">组织管理</Link>, permission: 'system.manage' },
+        { key: '/settings', label: <Link to="/settings">系统设置</Link>, permission: 'system.manage' },
       ],
     },
   ];
+  // 顶层项用自身 permission 过滤；submenu 过滤其 children，children 为空则整组隐藏
   const menuItems = menuGroups
-    .map((g) => ({ ...g, children: g.children.filter((c) => canSee(c.permission)) }))
-    .filter((g) => g.children.length > 0);
+    .map((g) => (g.children ? { ...g, children: g.children.filter((c) => canSee(c.permission)) } : g))
+    .filter((g) => (g.children ? g.children.length > 0 : canSee(g.permission)));
 
   // 选中态：支持子路由前缀匹配（如 /customers/123 高亮"客户管理"），避免进详情页后菜单失焦
   const selectedKey = (() => {
-    const keys = menuItems.flatMap((g) => (g.children || []).map((c) => c.key));
+    const keys = menuItems.flatMap((g) => (g.children ? g.children.map((c) => c.key) : [g.key]));
     const hit = keys
       .filter((k) => location.pathname === k || location.pathname.startsWith(k + '/'))
       .sort((a, b) => b.length - a.length)[0];
@@ -200,7 +193,13 @@ function AppLayout() {
           theme={resolvedTheme}
           style={{ position: 'sticky', top: 0, height: '100vh', overflow: 'auto', boxShadow: '2px 0 8px rgba(0,0,0,0.08)' }}
         >
-          <SideContent theme={resolvedTheme} selectedKey={selectedKey} items={menuItems} />
+          <SideContent
+            theme={resolvedTheme}
+            selectedKey={selectedKey}
+            items={menuItems}
+            openKeys={openKeys}
+            onOpenChange={setOpenKeys}
+          />
         </Sider>
       )}
       <Layout>
@@ -279,6 +278,8 @@ function AppLayout() {
           theme={resolvedTheme}
           selectedKey={selectedKey}
           items={menuItems}
+          openKeys={openKeys}
+          onOpenChange={setOpenKeys}
           onMenuClick={() => setDrawerOpen(false)}
         />
       </Drawer>

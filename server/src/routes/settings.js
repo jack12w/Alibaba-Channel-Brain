@@ -121,6 +121,17 @@ router.post('/logo', requirePermission('system.manage'), logoUpload.single('file
   res.json({ ok: true, path: '/api/settings/logo' });
 });
 
+// DELETE /api/settings/logo — 删除渠道 Logo（仅管理员）：同时删数据库记录 + 磁盘文件
+router.delete('/logo', requirePermission('system.manage'), (req, res) => {
+  const rel = getSetting('channel_logo');
+  if (rel) {
+    const abs = path.join(__dirname, '..', '..', rel);
+    try { if (fs.existsSync(abs)) fs.unlinkSync(abs); } catch (e) { /* 文件缺失则忽略，继续清记录 */ }
+    db.prepare("DELETE FROM app_settings WHERE key = 'channel_logo'").run();
+  }
+  res.json({ ok: true });
+});
+
 // ---------- 渠道考核（基准值 / 目标值）----------
 // GET /api/settings/channel-assessment — 读取渠道考核配置
 router.get('/channel-assessment', requirePermission('system.manage'), (req, res) => {

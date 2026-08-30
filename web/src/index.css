@@ -51,3 +51,98 @@ html, body, #root {
     padding: 14px;
   }
 }
+
+/* ========== 左侧菜单（跟随主题 + 子项两列网格 + 隐藏滚动条） ========== */
+.cb-sider {
+  display: flex;
+  flex-direction: column;
+  min-height: 100%;
+}
+.cb-sider .cb-sider-logo {
+  min-height: 64px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--ant-color-border-secondary, rgba(0, 0, 0, 0.06));
+}
+.cb-sider .cb-sider-logo img {
+  max-height: 38px;
+  max-width: 100%;
+  object-fit: contain;
+}
+.cb-sider .cb-sider-logo-fallback {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--ant-color-text);
+  font-size: 16px;
+  font-weight: 600;
+}
+.cb-sider .cb-sider-logo-fallback .anticon {
+  color: var(--ant-color-primary);
+}
+
+/* 让 antd Menu 填满侧栏高度，去掉默认右边框 */
+.cb-sider .ant-menu {
+  flex: 1;
+  padding: 8px 0;
+  border-inline-end: 0 !important;
+}
+
+/* 隐藏侧栏滚动条（多菜单时更清爽） */
+.cb-sider,
+.ant-layout-sider {
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* 旧版 Edge/IE */
+}
+.cb-sider::-webkit-scrollbar,
+.ant-layout-sider::-webkit-scrollbar {
+  display: none; /* Chrome / Safari / 新版 Edge */
+  width: 0;
+  height: 0;
+}
+
+/* 一级菜单条目：icon + 名称 + 右侧箭头，撑满整行 */
+.cb-sider .ant-menu-submenu > .ant-menu-submenu-title,
+.cb-sider > .ant-menu > .ant-menu-item {
+  height: 44px;
+  line-height: 44px;
+}
+
+/* 分组标题（即便 label 为空也不会留下分隔空间） */
+.cb-sider .ant-menu-item-group-title {
+  display: none;
+}
+
+/* 关键：完全不碰 .ant-menu-sub 的 display 属性。
+   antd 通过 display:none 隐藏未展开的子菜单容器来实现折叠；若用 display:flex/grid 强行覆盖，
+   即使父级处于"折叠"状态，子项仍可见——这就是「点了折叠但子级还在」的根因。
+   这里子项排两列靠 width:50% + float 自身实现，避开任何对容器 display 的覆盖。 */
+.cb-sider .ant-menu-sub {
+  padding: 0 !important;
+  list-style: none;
+  margin: 0;
+}
+.cb-sider .ant-menu-sub .ant-menu-item,
+.cb-sider .ant-menu-sub .ant-menu-item-only-child {
+  width: 50% !important;
+  height: 38px !important;
+  line-height: 38px !important;
+  padding: 0 6px !important;
+  margin: 0 !important;
+  margin-inline: 0 !important;
+  text-align: center;
+  font-size: 13px;
+  border-radius: 0;
+  float: left;
+  box-sizing: border-box;
+}
+/* float 之后必须清浮动，否则单数子项会与后续父级互卡 */
+.cb-sider .ant-menu-sub::after {
+  content: '';
+  display: block;
+  clear: both;
+  height: 0;
+  visibility: hidden;
+}

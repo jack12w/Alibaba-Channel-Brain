@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { Card, Form, Input, Switch, Button, Select, App, Alert, Typography, Space, Upload, InputNumber, Tooltip, Table } from 'antd';
-import { SendOutlined, UploadOutlined, QuestionCircleOutlined } from '@ant-design/icons';
+import { Card, Form, Input, Switch, Button, Select, App, Alert, Typography, Space, Upload, InputNumber, Tooltip, Table, Popconfirm } from 'antd';
+import { SendOutlined, UploadOutlined, QuestionCircleOutlined, DeleteOutlined } from '@ant-design/icons';
 import { api, getToken } from '../api/client';
 
 // 渠道考核指标结构（驱动两列表单渲染）
@@ -88,6 +88,7 @@ export default function Settings() {
   const [uploading, setUploading] = useState(false);
   const [logoVer, setLogoVer] = useState(0);
   const [logoUploading, setLogoUploading] = useState(false);
+  const [logoDeleting, setLogoDeleting] = useState(false);
   const [assess, setAssess] = useState({ baseline: DEFAULT_BASELINE, target: {} });
   const [assessSaving, setAssessSaving] = useState(false);
   const { message } = App.useApp();
@@ -198,6 +199,25 @@ export default function Settings() {
       message.error(e.message);
     } finally {
       setLogoUploading(false);
+    }
+  };
+
+  const onDeleteLogo = async () => {
+    setLogoDeleting(true);
+    try {
+      const token = getToken();
+      const res = await fetch('/api/settings/logo', {
+        method: 'DELETE',
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error || `删除失败（${res.status}）`);
+      message.success('Logo 已删除，已恢复默认标题');
+      setLogoVer(Date.now());
+    } catch (e) {
+      message.error(e.message);
+    } finally {
+      setLogoDeleting(false);
     }
   };
 
@@ -329,6 +349,16 @@ export default function Settings() {
           >
             <Button icon={<UploadOutlined />} loading={logoUploading}>上传 Logo</Button>
           </Upload>
+          <Popconfirm
+            title="删除当前 Logo？"
+            description="删除后左侧菜单将恢复为默认标题文字"
+            okText="确认删除"
+            cancelText="取消"
+            okButtonProps={{ danger: true }}
+            onConfirm={onDeleteLogo}
+          >
+            <Button danger icon={<DeleteOutlined />} loading={logoDeleting}>删除 Logo</Button>
+          </Popconfirm>
         </div>
         <Alert type="info" showIcon style={{ marginTop: 12 }} message="建议正方形 PNG/SVG，高度约 40px；上传后左侧菜单顶部立即显示。" />
       </Card>
