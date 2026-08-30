@@ -57,9 +57,14 @@ export default function Ads() {
         </Col>
         <Col xs={12} md={6}>
           <Card size="small" title="广告产品营收构成">
-            <div style={{ fontSize: 12, lineHeight: 2 }}>
-              品牌 {fmt(ov.rev_brand)} · 顶展 {fmt(ov.rev_top)} · 问鼎 {fmt(ov.rev_ask)}<br />
-              回眸 {fmt(ov.rev_review)} · 明星展位 {fmt(ov.rev_star)}
+            <div style={{ fontSize: 12, lineHeight: 1.9 }}>
+              <div style={{ fontWeight: 600 }}>P4P 消耗</div>
+              <div>当月 {fmt(ov.monthly_spend)}</div>
+              <div>本季 {fmt(ov.quarter_spend)}</div>
+              <div>本财年 {fmt(ov.year_spend)}</div>
+              <div style={{ fontWeight: 600, marginTop: 4 }}>品牌广告</div>
+              <div>当月 {fmt(ov.ad_revenue_total)}</div>
+              <div style={{ color: 'var(--ant-color-text-secondary)', fontSize: 11 }}>（本季 / 本财年暂无字段）</div>
             </div>
           </Card>
         </Col>

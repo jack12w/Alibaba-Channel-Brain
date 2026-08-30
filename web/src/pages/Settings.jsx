@@ -3,6 +3,20 @@ import { Card, Form, Input, Switch, Button, Select, App, Alert, Typography, Spac
 import { SendOutlined, UploadOutlined, QuestionCircleOutlined, DeleteOutlined } from '@ant-design/icons';
 import { api, getToken } from '../api/client';
 
+// 取当前页面的一级域名（如 skills.rehomi.com → rehomi.com）；localhost / IP / 异常时兜底为 rehomi.com
+function getFirstLevelDomain() {
+  try {
+    const host = window.location.hostname;
+    if (!host || host === 'localhost' || /^(\d{1,3}\.){3}\d{1,3}$/.test(host)) {
+      return 'rehomi.com';
+    }
+    const parts = host.split('.');
+    return parts.length >= 2 ? parts.slice(-2).join('.') : host;
+  } catch {
+    return 'rehomi.com';
+  }
+}
+
 // 渠道考核指标结构（驱动两列表单渲染）
 const ASSESS_GROUPS = [
   {
@@ -435,12 +449,14 @@ export default function Settings() {
         </Button>
       </Card>
 
-      <Card title="推送规则说明" size="small">
-        <Typography.Paragraph style={{ marginBottom: 8 }}>
-          <b>⚠️ 客户指标异常</b>：监控指标跌破目标值（如 P4P 日均消耗低于设定值）
+      <Card title="系统版权" size="small">
+        <Typography.Paragraph style={{ marginBottom: 4 }}>
+          <b>渠道中心大脑</b> · Channel Brain{' '}
+          <Typography.Text code style={{ fontSize: 12 }}>V1.0.0</Typography.Text>
         </Typography.Paragraph>
-        <Typography.Paragraph style={{ marginBottom: 0 }}>
-          <b>📉 客户指标下降提醒</b>：监控指标未跌破目标，但较上期数据下降（如本月询盘低于上月）
+        <Typography.Paragraph style={{ marginBottom: 0, color: 'var(--ant-color-text-secondary)' }}>
+          © {new Date().getFullYear()} {getFirstLevelDomain()} 版权所有&nbsp;&nbsp;&nbsp;技术支持：
+          <a href="https://rehomi.com/xinghuo" target="_blank" rel="noreferrer">星火工作室</a>
         </Typography.Paragraph>
       </Card>
     </div>

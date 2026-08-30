@@ -52,6 +52,17 @@ html, body, #root {
   }
 }
 
+/* ========== 侧栏/顶栏统一高度（侧栏分割线高度 = 顶栏高度，避免左右不等高） ==========
+   一处改、全局同步：在 :root 上调 --cb-header-h，单位 px */
+:root {
+  --cb-header-h: 64px;
+}
+/* 顶栏：显式 height，与侧栏 logo 区用同一个变量 */
+.ant-layout-header {
+  height: var(--cb-header-h);
+  line-height: var(--cb-header-h);
+}
+
 /* ========== 左侧菜单（跟随主题 + 子项两列网格 + 隐藏滚动条） ========== */
 .cb-sider {
   display: flex;
@@ -59,15 +70,18 @@ html, body, #root {
   min-height: 100%;
 }
 .cb-sider .cb-sider-logo {
-  min-height: 64px;
+  /* 高度与顶栏完全一致；不再用 padding 去撑，避免与 antd Header 各算各的高度 */
+  height: var(--cb-header-h);
+  box-sizing: border-box;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 14px 16px;
+  padding: 0 16px;
   border-bottom: 1px solid var(--ant-color-border-secondary, rgba(0, 0, 0, 0.06));
+  flex-shrink: 0;
 }
 .cb-sider .cb-sider-logo img {
-  max-height: 38px;
+  max-height: calc(var(--cb-header-h) - 16px);
   max-width: 100%;
   object-fit: contain;
 }
