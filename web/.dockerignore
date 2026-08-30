@@ -1,0 +1,6 @@
+# 依赖与构建产物不进镜像（Dockerfile 内会重新 npm ci + build）
+node_modules/
+dist/
+*.log
+.DS_Store
+.nvmrc

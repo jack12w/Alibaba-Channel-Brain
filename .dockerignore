@@ -1,0 +1,25 @@
+# 依赖与构建产物不进镜像
+node_modules/
+dist/
+web/node_modules/
+web/dist/
+server/node_modules/
+
+# 数据库与上传文件（运行时挂卷，不打进镜像）
+server/data/
+server/data/*.db
+server/data/*.db-*
+server/data/uploads/
+
+# 本地敏感/内部目录
+.workbuddy/
+extension/
+docs/
+
+# 日志与临时文件
+*.log
+.DS_Store
+
+# 环境变量文件
+.env
+.env.*

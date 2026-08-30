@@ -1,0 +1,58 @@
+# 渠道中心大脑 · Docker Compose
+# 启动：docker compose up -d --build
+# 停止：docker compose down
+# 日志：docker compose logs -f api
+
+services:
+  # ── 后端 API ─────────────────────────────
+  api:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+    container_name: channel_brain_api
+    restart: always
+    environment:
+      - NODE_ENV=production
+      - TZ=Asia/Shanghai
+      - PORT=3000
+      # 数据库路径：指向挂载卷，容器重建/升级不丢数据
+      - DB_PATH=/app/data/channel-brain.db
+      # JWT 密钥：首次启动由 initJwtSecret() 自动播种强随机密钥并持久化到 DB，
+      # 无需显式配置；如需固定密钥可在此设置（优先于 DB 中已存的）。
+      # - JWT_SECRET=change-me-to-a-long-random-string
+    volumes:
+      - db_data:/app/data
+    ports:
+      # 后端可仅对宿主机本机暴露，由 web(Nginx) 反代；如需直连调试可改 3000:3000
+      - '127.0.0.1:3000:3000'
+    healthcheck:
+      test: ['CMD-SHELL', 'node -e "require(\'http\').get(\'http://localhost:3000/api/health\',r=>{process.exit(r.statusCode===200?0:1)})"']
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+    networks:
+      - app_net
+
+  # ── 前端（Nginx 托管 + 反代）──────────────
+  web:
+    build:
+      context: ./web
+      dockerfile: Dockerfile
+    container_name: channel_brain_web
+    restart: always
+    ports:
+      - '8080:80'
+    depends_on:
+      api:
+        condition: service_healthy
+    networks:
+      - app_net
+
+networks:
+  app_net:
+    driver: bridge
+
+volumes:
+  # SQLite 数据库 + uploads 持久化（数据不随容器销毁）
+  db_data:

@@ -1,0 +1,8 @@
+# 依赖与数据不进镜像
+node_modules/
+data/
+*.db
+*.db-*
+*.log
+.DS_Store
+.nvmrc

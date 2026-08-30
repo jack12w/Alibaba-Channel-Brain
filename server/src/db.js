@@ -4,8 +4,12 @@ const path = require('path');
 const fs = require('fs');
 const Database = require('better-sqlite3');
 
-const DATA_DIR = path.join(__dirname, '..', 'data');
-const DB_PATH = path.join(DATA_DIR, 'channel-brain.db');
+const DATA_DIR = process.env.DB_PATH
+  ? path.dirname(process.env.DB_PATH)
+  : path.join(__dirname, '..', 'data');
+// 数据库文件路径：优先读环境变量 DB_PATH（Docker 挂卷持久化用），
+// 缺省回退到项目内 server/data/channel-brain.db（本地开发行为不变）。
+const DB_PATH = process.env.DB_PATH || path.join(DATA_DIR, 'channel-brain.db');
 const SCHEMA_PATH = path.join(__dirname, 'schema.sql');
 
 if (!fs.existsSync(DATA_DIR)) {
